@@ -1,0 +1,427 @@
+<title>План приложения ПИТАНИЕ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: одна колонка ~720px, разделы-карточки по смыслу; макет телефона + живой калькулятор как доказательство логики */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --fg:#1b2420; --muted:#5d6b64; --line:#dde3dc;
+  --accent:#2f6b4f; --accent-soft:#e2efe7;
+  --prot:#3b6fd8; --fat:#d99a1e; --cx:#2e9a5e; --sx:#d4507a; --fib:#7a5bc7; --water:#1f9bb5;
+  --f-display:"Unbounded",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --phone:#101614; --phone-fg:#eef3ef; --phone-card:#1b2421;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111614; --surface:#18201c; --fg:#e6ece8; --muted:#97a69e; --line:#2a3530;
+  --accent:#6cc497; --accent-soft:#1f3329;
+  --prot:#6f9bff; --fat:#f0b544; --cx:#4fc483; --sx:#f07aa0; --fib:#a68af0; --water:#4cc3da;
+  --phone:#05080a; --phone-card:#141c19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#18201c; --fg:#e6ece8; --muted:#97a69e; --line:#2a3530;
+  --accent:#6cc497; --accent-soft:#1f3329;
+  --prot:#6f9bff; --fat:#f0b544; --cx:#4fc483; --sx:#f07aa0; --fib:#a68af0; --water:#4cc3da;
+  --phone:#05080a; --phone-card:#141c19; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--f-body);padding:0 16px}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(2.2rem,8vw,3.4rem);letter-spacing:.02em}
+h2{font-size:1.35rem;font-weight:700}
+h3{font-size:1rem;font-weight:500}
+p{margin:0}
+.eyebrow{font:600 .75rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lead{font-size:1.1rem;color:var(--muted);max-width:62ch}
+section{display:flex;flex-direction:column;gap:16px}
+.muted{color:var(--muted)}
+ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+code,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+code{font-size:.88em;background:var(--accent-soft);padding:1px 6px;border-radius:4px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center}
+.hero-text{display:flex;flex-direction:column;gap:14px;min-width:0}
+.tagline{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 .8rem var(--f-body);padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.phone{justify-self:center}}
+
+/* phone mockup */
+.phone{width:260px;max-width:100%;background:var(--phone);color:var(--phone-fg);border-radius:34px;padding:14px 12px 10px;box-shadow:0 20px 50px -20px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:10px;font-size:12px}
+.ph-top{display:flex;justify-content:space-between;align-items:baseline;padding:4px 6px 0}
+.ph-top b{font:700 13px var(--f-display);letter-spacing:.05em}
+.ph-ring{display:grid;place-items:center;padding:6px 0}
+.ring{width:132px;height:132px;border-radius:50%;background:conic-gradient(var(--cx) 0 62%,rgba(255,255,255,.1) 0);display:grid;place-items:center}
+.ring>div{width:108px;height:108px;border-radius:50%;background:var(--phone);display:grid;place-items:center;text-align:center;line-height:1.15}
+.ring .big{font:600 22px var(--f-mono)}
+.ring small{opacity:.65;font-size:10px}
+.bars{display:flex;flex-direction:column;gap:7px;background:var(--phone-card);border-radius:16px;padding:10px 12px}
+.bar{display:grid;grid-template-columns:62px 1fr 50px;gap:8px;align-items:center}
+.bar .t{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar .t i{display:block;height:100%;border-radius:3px}
+.bar span:last-child{font-family:var(--f-mono);text-align:right;opacity:.8;font-size:10.5px}
+.meals{display:flex;flex-direction:column;gap:5px}
+.meal{background:var(--phone-card);border-radius:12px;padding:7px 10px;display:flex;justify-content:space-between}
+.meal span:last-child{font-family:var(--f-mono);opacity:.7}
+.tabs{display:flex;justify-content:space-around;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;font-size:10px;opacity:.75}
+.tabs .on{color:var(--cx);opacity:1;font-weight:600}
+
+/* cards / grids */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.screen h3{display:flex;gap:10px;align-items:baseline}
+.screen h3 .num{color:var(--accent);font-size:.8rem}
+
+/* formula steps */
+.steps{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.step{position:relative;padding:0 0 18px 22px;display:flex;flex-direction:column;gap:4px}
+.step::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.step:last-child{padding-bottom:0}
+.formula{font-family:var(--f-mono);font-size:.85rem;background:var(--accent-soft);border-radius:8px;padding:8px 12px;overflow-x:auto;white-space:nowrap}
+
+/* table */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font:600 .72rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.num{white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:baseline}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.85rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.field label b{font-family:var(--f-mono);color:var(--fg);font-weight:600}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+input[type=number],select{width:100%;font:500 1rem var(--f-body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;font:500 .9rem var(--f-body);padding:8px;border:0;background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--surface)}
+.out{display:flex;flex-direction:column;gap:12px}
+.kcal{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.kcal .num{font-size:2.4rem;font-weight:600;line-height:1}
+.stack{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
+.stack i{display:block;height:100%}
+.macro{display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;align-items:baseline;font-size:.93rem}
+.macro .num{text-align:right}
+.macro .k{color:var(--muted);font-size:.82rem}
+.warn{font-size:.85rem;color:var(--sx)}
+
+/* questions */
+.q{display:flex;flex-direction:column;gap:10px;counter-reset:q}
+.q li{list-style:none;position:relative;padding-left:34px}
+.q li::before{counter-increment:q;content:counter(q);position:absolute;left:0;top:1px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--surface);font:600 .8rem/24px var(--f-mono);text-align:center}
+.q{padding:0}
+.foot{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){.ring{transition:background .4s}}
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="hero-text">
+    <span class="eyebrow">План приложения · черновик v0</span>
+    <h1>ПИТАНИЕ</h1>
+    <p class="lead">Карманный дневник питания для телефона. Задаёшь нормы в граммах на килограмм массы тела, отмечаешь, что съел, и видишь, сколько белков, жиров, сложных и простых углеводов осталось на сегодня. Плюс шпаргалки, чтобы не гуглить.</p>
+    <div class="tagline">
+      <span class="chip">Работает без интернета</span>
+      <span class="chip">Без регистрации</span>
+      <span class="chip">Иконка на главном экране</span>
+      <span class="chip">Тёмная тема</span>
+    </div>
+  </div>
+
+  <div class="phone" aria-label="Макет главного экрана">
+    <div class="ph-top"><b>ПИТАНИЕ</b><span>чт, 8 окт</span></div>
+    <div class="ph-ring"><div class="ring"><div><span class="big">1 240</span><small>ккал осталось<br>из 2 650</small></div></div></div>
+    <div class="bars">
+      <div class="bar"><span>Белки</span><span class="t"><i style="width:58%;background:var(--prot)"></i></span><span>84/144</span></div>
+      <div class="bar"><span>Жиры</span><span class="t"><i style="width:52%;background:var(--fat)"></i></span><span>38/72</span></div>
+      <div class="bar"><span>Сложн. У</span><span class="t"><i style="width:47%;background:var(--cx)"></i></span><span>142/302</span></div>
+      <div class="bar"><span>Прост. У</span><span class="t"><i style="width:71%;background:var(--sx)"></i></span><span>47/66</span></div>
+      <div class="bar"><span>Вода</span><span class="t"><i style="width:40%;background:var(--water)"></i></span><span>1,1/2,6 л</span></div>
+    </div>
+    <div class="meals">
+      <div class="meal"><span>Завтрак</span><span>620 ккал</span></div>
+      <div class="meal"><span>Обед</span><span>790 ккал</span></div>
+      <div class="meal"><span>+ Ужин</span><span>—</span></div>
+    </div>
+    <div class="tabs"><span class="on">Сегодня</span><span>Добавить</span><span>Справка</span><span>Прогресс</span><span>Я</span></div>
+  </div>
+</header>
+
+<section>
+  <span class="eyebrow">Что это и как устроено</span>
+  <h2>Формат: одна веб-страница, которая ведёт себя как приложение</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Как открывать на телефоне</h3>
+      <p>Один HTML-файл (PWA). Открываешь ссылку в браузере телефона, жмёшь «Добавить на главный экран», и появляется иконка ПИТАНИЕ. Дальше открывается как обычное приложение, на весь экран, и работает без интернета.</p>
+    </div>
+    <div class="card">
+      <h3>Где живут данные</h3>
+      <p>Только в памяти телефона (в браузере). Ни сервера, ни аккаунтов. Чтобы ничего не потерять, есть кнопка «Сохранить копию» в файл и «Восстановить» из файла. Так же можно перенести всё на другой телефон.</p>
+    </div>
+    <div class="card">
+      <h3>Без магазинов приложений</h3>
+      <p>Не нужен Google Play / App Store, Android Studio и подписи. Обновить приложение = заменить файл. Исходник лежит в <code>C:\Г\ПИТАНИЕ</code>.</p>
+    </div>
+    <div class="card">
+      <h3>Хостинг (на выбор)</h3>
+      <p>Бесплатно на GitHub Pages (постоянная ссылка, полноценный офлайн) или как страница claude.ai по ссылке. Первый вариант надёжнее для ежедневного дневника.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Экраны</span>
+  <h2>Пять вкладок внизу экрана</h2>
+  <div class="grid2">
+    <div class="card screen">
+      <h3><span class="num">1</span>Сегодня</h3>
+      <ul>
+        <li>Кольцо калорий: «осталось N ккал».</li>
+        <li>Полоски: белки, жиры, сложные и простые углеводы, клетчатка, вода. Цвет полоски краснеет при перебое.</li>
+        <li>Приёмы пищи: завтрак, обед, ужин, перекусы. Тап по блюду: изменить граммы или удалить.</li>
+        <li>Подсказка: «до нормы белка 60 г, это примерно 250 г курицы или 330 г творога 5 %».</li>
+        <li>Листать дни влево-вправо.</li>
+      </ul>
+    </div>
+    <div class="card screen">
+      <h3><span class="num">2</span>Добавить</h3>
+      <ul>
+        <li>Поиск по базе продуктов с первых букв («гре» → гречка).</li>
+        <li>Вверху «Недавние» и «Избранное» для добавления в два тапа.</li>
+        <li>Ввод граммов с быстрыми кнопками: 50 / 100 / 150 / 200 г, «штука», «ложка».</li>
+        <li>Свои продукты (по этикетке на 100 г) и свои блюда-рецепты из нескольких ингредиентов.</li>
+        <li>«Копировать вчерашний завтрак» одной кнопкой.</li>
+      </ul>
+    </div>
+    <div class="card screen">
+      <h3><span class="num">3</span>Справка</h3>
+      <ul>
+        <li>Нормы в г/кг под разные цели.</li>
+        <li>Сложные и простые углеводы: что есть что, таблица гликемического индекса.</li>
+        <li>Топ продуктов по белку, клетчатке, на 100 г и на 100 ккал.</li>
+        <li>Порции «рукой»: ладонь, кулак, горсть, большой палец.</li>
+        <li>Калорийность граммa: Б 4, Ж 9, У 4, алкоголь 7 ккал.</li>
+      </ul>
+    </div>
+    <div class="card screen">
+      <h3><span class="num">4</span>Прогресс</h3>
+      <ul>
+        <li>График веса с линией тренда (среднее за 7 дней), чтобы не пугаться скачков воды.</li>
+        <li>Средние за неделю: ккал и БЖУ против нормы.</li>
+        <li>Серия дней, когда норма выполнена.</li>
+        <li>При изменении веса нормы пересчитываются автоматически (они же в г/кг).</li>
+      </ul>
+    </div>
+    <div class="card screen">
+      <h3><span class="num">5</span>Я (профиль и нормы)</h3>
+      <ul>
+        <li>Пол, возраст, рост, вес, % жира (необязательно), активность, цель.</li>
+        <li>Ползунки норм в г/кг с мгновенным пересчётом калорий.</li>
+        <li>Режим «Авто» (по цели) и «Вручную» (все г/кг задаёшь сам).</li>
+        <li>Сохранить копию / восстановить, тема, единицы.</li>
+      </ul>
+    </div>
+    <div class="card screen">
+      <h3><span class="num">+</span>База продуктов</h3>
+      <ul>
+        <li>Встроенная, около 250 продуктов: крупы, мясо, рыба, молочка, овощи, фрукты, орехи, хлеб, сладкое, напитки.</li>
+        <li>На 100 г: ккал, белки, жиры, углеводы с разбивкой на сложные и простые (сахара), клетчатка.</li>
+        <li>Крупы и макароны в двух видах: сухие и варёные, частая путаница.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Логика расчёта</span>
+  <h2>Как считаются нормы</h2>
+  <p class="muted">Главный принцип, как ты и хотел: белки и жиры задаются в граммах на килограмм массы тела, углеводы заполняют остаток калорий и делятся на сложные и простые.</p>
+  <div class="steps">
+    <div class="step">
+      <h3>1. Базовый обмен (сколько тратишь в покое)</h3>
+      <p>Формула Миффлина — Сан Жеора. Если знаешь свой % жира, точнее формула Кэтча — МакАрдла по безжировой массе.</p>
+      <div class="formula">муж: 10·вес + 6,25·рост − 5·возраст + 5 &nbsp;|&nbsp; жен: … − 161 &nbsp;|&nbsp; КМ: 370 + 21,6·(вес·(1 − %жира))</div>
+    </div>
+    <div class="step">
+      <h3>2. Расход за день</h3>
+      <p>Базовый обмен × коэффициент активности: 1,2 сидячий · 1,375 лёгкая · 1,55 средняя · 1,725 высокая · 1,9 очень высокая.</p>
+    </div>
+    <div class="step">
+      <h3>3. Цель</h3>
+      <p>Похудение −15 % (мягко) / −20 %, поддержание 0, набор +10 %. Ниже базового обмена приложение не опустит и предупредит.</p>
+    </div>
+    <div class="step">
+      <h3>4. Белки и жиры в г/кг</h3>
+      <p>Белок 1,6–2,2 г/кг (на похудении ближе к верху, чтобы сохранить мышцы). Жиры 0,8–1,0 г/кг, не ниже 0,6 г/кг (гормоны).</p>
+    </div>
+    <div class="step">
+      <h3>5. Углеводы — остаток</h3>
+      <p>(калории − белки·4 − жиры·9) / 4. Из них простые (сахара) по умолчанию не больше 10 % калорий, как рекомендует ВОЗ; остальное сложные.</p>
+    </div>
+    <div class="step">
+      <h3>6. Клетчатка и вода</h3>
+      <p>Клетчатка 14 г на каждые 1000 ккал. Вода 30–35 мл на кг веса, плюс к тренировкам.</p>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Нутриент</th><th>Похудение</th><th>Поддержание</th><th>Набор</th></tr></thead>
+      <tbody>
+        <tr><td><span class="dot" style="background:var(--prot)"></span>Белки, г/кг</td><td class="num">2,0–2,2</td><td class="num">1,6–1,8</td><td class="num">1,8–2,0</td></tr>
+        <tr><td><span class="dot" style="background:var(--fat)"></span>Жиры, г/кг</td><td class="num">0,8</td><td class="num">0,9–1,0</td><td class="num">1,0</td></tr>
+        <tr><td><span class="dot" style="background:var(--cx)"></span>Сложные углеводы</td><td colspan="3">остаток калорий за вычетом простых</td></tr>
+        <tr><td><span class="dot" style="background:var(--sx)"></span>Простые углеводы</td><td colspan="3">≤ 10 % калорий (на похудении можно 5 %)</td></tr>
+        <tr><td><span class="dot" style="background:var(--fib)"></span>Клетчатка</td><td colspan="3" class="num">14 г / 1000 ккал (обычно 25–40 г)</td></tr>
+        <tr><td><span class="dot" style="background:var(--water)"></span>Вода</td><td colspan="3" class="num">30–35 мл/кг</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Попробуй логику прямо здесь</span>
+  <h2>Живой калькулятор (прототип экрана «Я»)</h2>
+  <div class="card calc">
+    <div class="field-group" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="field"><label>Пол</label>
+        <div class="seg" id="sex"><button type="button" data-v="m" aria-pressed="true">Мужской</button><button type="button" data-v="f" aria-pressed="false">Женский</button></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="age">Возраст</label><input id="age" type="number" value="35" min="14" max="90"></div>
+        <div class="field"><label for="height">Рост, см</label><input id="height" type="number" value="180" min="120" max="230"></div>
+        <div class="field"><label for="weight">Вес, кг</label><input id="weight" type="number" value="80" min="35" max="250" step="0.1"></div>
+      </div>
+      <div class="field"><label for="act">Активность</label>
+        <select id="act">
+          <option value="1.2">Сидячая работа, без спорта</option>
+          <option value="1.375" selected>Лёгкая: 1–3 тренировки в неделю</option>
+          <option value="1.55">Средняя: 3–5 тренировок</option>
+          <option value="1.725">Высокая: 6–7 тренировок</option>
+          <option value="1.9">Очень высокая: физический труд + спорт</option>
+        </select>
+      </div>
+      <div class="field"><label for="goal">Цель</label>
+        <select id="goal">
+          <option value="-0.2">Похудение, −20 %</option>
+          <option value="-0.15">Мягкое похудение, −15 %</option>
+          <option value="0" selected>Поддержание</option>
+          <option value="0.1">Набор массы, +10 %</option>
+        </select>
+      </div>
+      <div class="field"><label for="p">Белки, г/кг <b id="pv"></b></label><input id="p" type="range" min="1.2" max="2.6" step="0.1" value="1.8"></div>
+      <div class="field"><label for="f">Жиры, г/кг <b id="fv"></b></label><input id="f" type="range" min="0.6" max="1.5" step="0.1" value="0.9"></div>
+      <div class="field"><label for="s">Простые углеводы, % калорий <b id="sv"></b></label><input id="s" type="range" min="0" max="20" step="1" value="10"></div>
+    </div>
+
+    <div class="out" aria-live="polite">
+      <div class="kcal"><span class="num" id="kcal">—</span><span class="muted">ккал в день</span></div>
+      <p class="muted" style="font-size:.88rem" id="base"></p>
+      <div class="stack" id="stack"></div>
+      <div class="macro" id="macro"></div>
+      <p class="warn" id="warn" hidden></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Дизайн</span>
+  <h2>Как будет выглядеть</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Под одну руку</h3>
+      <p>Вкладки и главная кнопка «+» внизу, под большим пальцем. Крупные цифры, минимум текста. Добавить продукт: 3 тапа.</p>
+    </div>
+    <div class="card">
+      <h3>Свой цвет у каждого нутриента</h3>
+      <p><span class="dot" style="background:var(--prot)"></span>белки · <span class="dot" style="background:var(--fat)"></span>жиры · <span class="dot" style="background:var(--cx)"></span>сложные · <span class="dot" style="background:var(--sx)"></span>простые · <span class="dot" style="background:var(--fib)"></span>клетчатка · <span class="dot" style="background:var(--water)"></span>вода. Один цвет везде: в полосках, графиках, справке.</p>
+    </div>
+    <div class="card">
+      <h3>Светлая и тёмная тема</h3>
+      <p>Подстраивается под тему телефона. Тёмная удобна вечером, когда записываешь ужин.</p>
+    </div>
+    <div class="card">
+      <h3>Без мусора</h3>
+      <p>Никакой рекламы, баллов, «челленджей» и уведомлений. Только цифры и шпаргалки.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Порядок работы</span>
+  <h2>Этапы</h2>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Этап</th><th>Что получаешь</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Профиль и нормы (калькулятор выше), экран «Сегодня», добавление продуктов, база ~250 продуктов, хранение на телефоне, копия в файл.</td></tr>
+        <tr><td class="num">2</td><td>Справка, свои продукты и рецепты, избранное, копирование приёмов пищи, вода.</td></tr>
+        <tr><td class="num">3</td><td>Прогресс: журнал веса с трендом, недельные средние. Установка на главный экран и офлайн.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">Этап 1 уже можно открывать на телефоне и пользоваться; дальше добавляем по мере твоих замечаний.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Нужно твоё решение</span>
+  <h2>Вопросы перед стартом</h2>
+  <ol class="q">
+    <li><b>Где держать приложение?</b> GitHub Pages (нужен бесплатный аккаунт GitHub, постоянная ссылка, полный офлайн) или страница claude.ai по ссылке (проще, но офлайн хуже).</li>
+    <li><b>Пользоваться будешь один или несколько человек</b> (например, семья с отдельными профилями)?</li>
+    <li><b>Нужны ли микроэлементы</b> (железо, кальций, витамин D и т.п.) или хватит БЖУ + клетчатка + вода?</li>
+    <li><b>Есть ли особенности</b>, которые учесть в справке: тренировки, вегетарианство, диабет и т.п.?</li>
+  </ol>
+  <p class="muted">Если ответов нет, начну с варианта по умолчанию: один профиль, только БЖУ + клетчатка + вода, файл в <code>C:\Г\ПИТАНИЕ</code>, хостинг выберем к концу этапа 1.</p>
+</section>
+
+<p class="foot">Справочные нормы в приложении взяты из общепринятых рекомендаций (ВОЗ, ISSN по белку). Это помощник для учёта, а не медицинская консультация.</p>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  let sex='m';
+  const fmt=(n,d=0)=>n.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+  document.querySelectorAll('#sex button').forEach(b=>b.addEventListener('click',()=>{
+    sex=b.dataset.v;
+    document.querySelectorAll('#sex button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    calc();
+  }));
+  function calc(){
+    const age=+$('age').value||35, h=+$('height').value||175, w=+$('weight').value||75;
+    const act=+$('act').value, goal=+$('goal').value;
+    const p=+$('p').value, f=+$('f').value, s=+$('s').value;
+    $('pv').textContent=fmt(p,1); $('fv').textContent=fmt(f,1); $('sv').textContent=s+' %';
+    const bmr=10*w+6.25*h-5*age+(sex==='m'?5:-161);
+    const tdee=bmr*act;
+    let kcal=Math.round(tdee*(1+goal)/10)*10;
+    const warn=[];
+    if(kcal<bmr){kcal=Math.round(bmr/10)*10;warn.push('Калории подняты до базового обмена: ниже опускаться не стоит.');}
+    const P=p*w, F=f*w;
+    let carbK=kcal-P*4-F*9;
+    if(carbK<0){warn.push('Белки и жиры уже съедают все калории. Уменьши г/кг.');carbK=0;}
+    const C=carbK/4;
+    const S=Math.min(C,kcal*s/100/4), CX=C-S;
+    const fib=kcal/1000*14, water=w*33/1000;
+    $('kcal').textContent=fmt(kcal);
+    $('base').textContent='Базовый обмен '+fmt(bmr)+' ккал · расход за день '+fmt(tdee)+' ккал';
+    const parts=[[P*4,'--prot'],[F*9,'--fat'],[CX*4,'--cx'],[S*4,'--sx']];
+    $('stack').innerHTML=parts.map(([k,c])=>`<i style="width:${kcal?k/kcal*100:0}%;background:var(${c})"></i>`).join('');
+    const rows=[['Белки',P,'--prot'],['Жиры',F,'--fat'],['Сложные углеводы',CX,'--cx'],['Простые углеводы',S,'--sx']];
+    $('macro').innerHTML=rows.map(([n,g,c])=>`<span><span class="dot" style="background:var(${c})"></span>${n}</span><span class="num">${fmt(g)} г</span><span class="num k">${fmt(g/w,1)} г/кг</span>`).join('')+
+      `<span><span class="dot" style="background:var(--fib)"></span>Клетчатка</span><span class="num">${fmt(fib)} г</span><span class="k"></span>`+
+      `<span><span class="dot" style="background:var(--water)"></span>Вода</span><span class="num">${fmt(water,1)} л</span><span class="k"></span>`;
+    $('warn').hidden=!warn.length; $('warn').textContent=warn.join(' ');
+  }
+  ['age','height','weight','act','goal','p','f','s'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+})();
+</script>

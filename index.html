@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ПИТАНИЕ</title>
+<meta name="theme-color" content="#2f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ПИТАНИЕ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Приложение-оболочка: шапка с профилем, прокручиваемый экран, нижняя панель вкладок с кнопкой «+» по центру */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --surface2:#eef2ed; --fg:#1b2420; --muted:#5d6b64; --line:#dde3dc;
+  --accent:#2f6b4f; --accent-fg:#ffffff; --accent-soft:#e2efe7;
+  --prot:#3b6fd8; --fat:#d99a1e; --cx:#2e9a5e; --sx:#d4507a; --fib:#7a5bc7; --water:#1f9bb5;
+  --ok:#2e9a5e; --warn:#c98a10; --bad:#d23f5e;
+  --f-display:"Unbounded",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --shadow:0 10px 30px -12px rgba(20,40,30,.35);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111614; --surface:#18201c; --surface2:#202a25; --fg:#e6ece8; --muted:#97a69e; --line:#2a3530;
+  --accent:#6cc497; --accent-fg:#0d1a13; --accent-soft:#1f3329;
+  --prot:#6f9bff; --fat:#f0b544; --cx:#4fc483; --sx:#f07aa0; --fib:#a68af0; --water:#4cc3da;
+  --ok:#4fc483; --warn:#f0b544; --bad:#ff6b85; --shadow:0 10px 30px -12px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111614; --surface:#18201c; --surface2:#202a25; --fg:#e6ece8; --muted:#97a69e; --line:#2a3530;
+  --accent:#6cc497; --accent-fg:#0d1a13; --accent-soft:#1f3329;
+  --prot:#6f9bff; --fat:#f0b544; --cx:#4fc483; --sx:#f07aa0; --fib:#a68af0; --water:#4cc3da;
+  --ok:#4fc483; --warn:#f0b544; --bad:#ff6b85; --shadow:0 10px 30px -12px rgba(0,0,0,.7); color-scheme:dark}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 var(--f-body);overscroll-behavior-y:none}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select{font:inherit;color:var(--fg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+p{margin:0}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+
+/* шапка */
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 8px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid transparent}
+header.scrolled{border-bottom-color:var(--line)}
+.logo{font:700 1.05rem var(--f-display);letter-spacing:.06em}
+.profiles{display:flex;gap:6px;overflow-x:auto}
+.pchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:500;white-space:nowrap}
+.pchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+main{padding:8px 16px calc(96px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+/* нижняя панель */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);align-items:end;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav.tabs button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.7rem;color:var(--muted);padding:4px 0}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
+nav.tabs .fab{width:56px;height:56px;border-radius:18px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;margin:-22px auto 0;box-shadow:var(--shadow)}
+nav.tabs .fab svg{width:28px;height:28px}
+
+/* карточки */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-size:1rem}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 14px;font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.btn.ghost{border-color:transparent;background:transparent;padding-inline:8px}
+.btn.block{width:100%;padding:13px}
+.iconbtn{border:0;background:var(--surface2);border-radius:12px;width:40px;height:40px;display:grid;place-items:center;flex:none}
+.iconbtn svg{width:20px;height:20px}
+
+/* дата */
+.datebar{display:flex;align-items:center;gap:8px}
+.datebar .lbl{flex:1;text-align:center;font-weight:600}
+.datebar .lbl small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
+
+/* сводка */
+.summary{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.ring{position:relative;width:128px;height:128px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.1}
+.ring .big{font:600 1.5rem var(--f-mono)}
+.ring small{color:var(--muted);font-size:.72rem}
+.bars{display:flex;flex-direction:column;gap:9px;min-width:0}
+.bar .top{display:flex;justify-content:space-between;gap:6px;font-size:.8rem;white-space:nowrap}
+.bar .top .num{font-size:.78rem;color:var(--muted)}
+.bar .top .num b{color:var(--fg);font-weight:600}
+.bar .t{height:7px;border-radius:4px;background:var(--surface2);overflow:hidden;margin-top:3px}
+.bar .t i{display:block;height:100%;border-radius:4px;transition:width .3s}
+.bar.over .top .num b{color:var(--bad)}
+@media (max-width:370px){.summary{grid-template-columns:1fr}.ring{margin:0 auto}}
+
+.hint{background:var(--accent-soft);border-color:transparent;font-size:.9rem;gap:4px}
+.banner{background:color-mix(in srgb,var(--warn) 16%,var(--surface));border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+
+/* вода */
+.water .cups{display:flex;gap:4px;flex-wrap:wrap}
+.water .cup{width:15px;height:21px;border-radius:3px 3px 6px 6px;border:1.5px solid var(--water);opacity:.35}
+.water .cup.f{background:var(--water);opacity:1}
+
+/* приёмы пищи */
+.meal-h{display:flex;align-items:center;gap:8px}
+.meal-h h2{flex:1}
+.meal-h .num{color:var(--muted);font-size:.85rem}
+.items{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%}
+.item:first-child{border-top:0}
+.item .n{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.item .k{font-family:var(--f-mono);text-align:right}
+.item .m{grid-column:1/-1;font-size:.78rem;color:var(--muted);font-family:var(--f-mono)}
+.addline{display:flex;gap:8px;flex-wrap:wrap}
+.empty{color:var(--muted);font-size:.9rem}
+
+/* шторка */
+.sheet-bg{position:fixed;inset:0;z-index:20;background:rgba(10,20,15,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:640px;height:94%;border-radius:22px 22px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}
+.sheet-h h2{flex:1;font-size:1.05rem}
+.sheet-b{flex:1;overflow-y:auto;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.search{position:relative}
+.search input{width:100%;padding:13px 14px 13px 42px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:1rem}
+.search svg{position:absolute;left:13px;top:50%;width:20px;height:20px;transform:translateY(-50%);color:var(--muted)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.85rem;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.flist{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.fitem{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 14px;border:0;border-top:1px solid var(--line);background:none;text-align:left;width:100%}
+.fitem:first-child{border-top:0}
+.fitem .n{font-weight:500;overflow-wrap:anywhere}
+.fitem .k{font-family:var(--f-mono);color:var(--muted);font-size:.85rem}
+.fitem .m{grid-column:1/-1;font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.sec-t{font:600 .72rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 4px;font-size:.88rem;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.amount{display:flex;align-items:center;gap:8px}
+.amount input{flex:1;min-width:0;font:600 1.8rem var(--f-mono);padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:center}
+.amount span{font-size:1.1rem;color:var(--muted)}
+.preview{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.preview div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 4px}
+.preview b{display:block;font:600 1.05rem var(--f-mono)}
+.preview span{font-size:.72rem;color:var(--muted)}
+.per100{font-size:.8rem;color:var(--muted);font-family:var(--f-mono)}
+.star{border:0;background:none;width:40px;height:40px;display:grid;place-items:center;color:var(--muted)}
+.star[aria-pressed="true"]{color:var(--fat)}
+.star svg{width:24px;height:24px}
+
+/* формы */
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.field label b{color:var(--fg);font-family:var(--f-mono);font-weight:600}
+.field input[type=number],.field input[type=text],.field input:not([type]),.field select,.field input[inputmode]{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface2)}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.norms{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;align-items:baseline;font-size:.92rem}
+.norms .num{text-align:right}
+.norms .gk{color:var(--muted);font-size:.8rem}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px}
+.stack{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface2)}
+.stack i{display:block;height:100%}
+.warnt{color:var(--bad);font-size:.85rem}
+.big-k{font:600 2rem var(--f-mono);line-height:1}
+
+/* справка */
+details.ref{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+details.ref summary{list-style:none;padding:14px 16px;font-weight:600;display:flex;align-items:center;gap:10px;cursor:pointer}
+details.ref summary::-webkit-details-marker{display:none}
+details.ref summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+details.ref[open] summary::after{transform:rotate(-135deg)}
+details.ref .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;font-size:.93rem}
+details.ref ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font:600 .68rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface2)}
+td.num,th.num{text-align:right;white-space:nowrap}
+tr.me td{background:var(--accent-soft)}
+.gi{display:inline-block;min-width:34px;text-align:center;border-radius:6px;padding:0 4px;font-family:var(--f-mono);font-size:.8rem}
+.gi.lo{background:color-mix(in srgb,var(--ok) 20%,transparent)}
+.gi.mid{background:color-mix(in srgb,var(--warn) 22%,transparent)}
+.gi.hi{background:color-mix(in srgb,var(--bad) 20%,transparent)}
+
+/* прогресс */
+.chart svg{width:100%;height:auto;display:block}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-family:var(--f-mono);font-size:.78rem}
+.pill.ok{background:color-mix(in srgb,var(--ok) 20%,transparent)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 24%,transparent)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 22%,transparent)}
+.pill.none{color:var(--muted)}
+
+/* тост */
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:var(--fg);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);max-width:calc(100% - 32px);font-size:.92rem}
+.toast button{background:none;border:0;color:var(--accent);font-weight:600;padding:0}
+:root:not([data-theme="light"]) .toast button{color:var(--accent-soft)}
+.confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:color-mix(in srgb,var(--bad) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--bad) 35%,var(--line));border-radius:12px;padding:10px 12px;font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header id="hdr">
+  <span class="logo">ПИТАНИЕ</span>
+  <div class="profiles" id="profiles"></div>
+</header>
+<main id="view"></main>
+<nav class="tabs" id="tabs" aria-label="Разделы">
+  <button data-act="tab" data-v="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 8 8"/></svg>Сегодня</button>
+  <button data-act="tab" data-v="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 7-9"/></svg>Прогресс</button>
+  <button data-act="add" aria-label="Добавить еду"><span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+  <button data-act="tab" data-v="ref"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/><path d="M9 9h6M9 13h6"/></svg>Справка</button>
+  <button data-act="tab" data-v="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Профиль</button>
+</nav>
+<div id="sheet"></div>
+<div id="toast"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script src="foods.js"></script>
+<script>
+'use strict';
+const VERSION = '1.0';
+const KEY = 'pitanie.v1';
+const MEALS = [['b','Завтрак'],['l','Обед'],['d','Ужин'],['s','Перекусы']];
+const MEAL_NAME = Object.fromEntries(MEALS);
+const GOALS = {
+  lose20:{t:'Похудение, −20 %', k:-0.20, p:2.1, f:0.8, s:5},
+  lose15:{t:'Мягкое похудение, −15 %', k:-0.15, p:2.0, f:0.8, s:7},
+  keep:  {t:'Поддержание веса', k:0, p:1.7, f:0.9, s:10},
+  gain:  {t:'Набор массы, +10 %', k:0.10, p:1.9, f:1.0, s:10},
+};
+const ACTS = [[1.2,'Сидячая, без спорта'],[1.375,'Лёгкая: 1–3 тренировки в неделю'],[1.55,'Средняя: 3–5 тренировок'],[1.725,'Высокая: 6–7 тренировок'],[1.9,'Очень высокая: физ. труд + спорт']];
+const GLASS = 250;
+
+/* ---------- состояние ---------- */
+function newProfile(id, name, sex){
+  const f = sex === 'f';
+  return {id, name, sex, age: f?32:35, height: f?165:180, weight: f?60:80, bf:null, act:1.375, goal:'keep', p:1.7, f:0.9, s:10, checked:false};
+}
+function defaults(){
+  return {v:1, active:'p1', theme:'auto', profiles:[newProfile('p1','Гриша','m'), newProfile('p2','Таня','f')],
+          days:{}, weights:{}, custom:[], fav:{}, recent:{}};
+}
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) } catch(e) { S = null }
+if (!S || S.v !== 1 || !Array.isArray(S.profiles) || !S.profiles.length) S = defaults();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)) } catch(e) { toast('Не удалось сохранить: память браузера недоступна') } }
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist() } catch(e) {}
+
+const ui = {view:'today', date: todayKey(), sheet:null, confirm:null};
+
+/* ---------- утилиты ---------- */
+function todayKey(d = new Date()){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
+function parseKey(k){ const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d) }
+function shiftKey(k, n){ const d = parseKey(k); d.setDate(d.getDate()+n); return todayKey(d) }
+const fmt = (n, d=0) => (Math.round(n*10**d)/10**d).toLocaleString('ru-RU',{minimumFractionDigits:d, maximumFractionDigits:d});
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : NaN };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const norm = s => s.toLowerCase().replace(/ё/g,'е');
+const $ = id => document.getElementById(id);
+const WD = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+const MON = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function dateLabel(k){
+  const d = parseKey(k), t = todayKey();
+  const rel = k === t ? 'Сегодня' : k === shiftKey(t,-1) ? 'Вчера' : k === shiftKey(t,1) ? 'Завтра' : WD[d.getDay()][0].toUpperCase()+WD[d.getDay()].slice(1);
+  return {rel, full: d.getDate()+' '+MON[d.getMonth()]+(d.getFullYear() !== new Date().getFullYear() ? ' '+d.getFullYear() : '')};
+}
+function plural(n, a, b, c){ n = Math.abs(Math.round(n)); const m10 = n%10, m100 = n%100; return m10===1&&m100!==11 ? a : m10>=2&&m10<=4&&(m100<10||m100>=20) ? b : c }
+
+/* ---------- продукты ---------- */
+let FOOD = new Map();
+function buildFoods(){
+  FOOD = new Map();
+  for (const r of window.FOODS) FOOD.set(String(r[0]), {id:String(r[0]), cat:r[1], n:r[2], k:r[3], p:r[4], f:r[5], c:r[6], s:r[7], fib:r[8], un:r[9]||null, ug:r[10]||null});
+  for (const c of S.custom) FOOD.set(c.id, {...c, cat:-1, custom:true});
+}
+buildFoods();
+const vec = f => [f.k, f.p, f.f, f.c, f.s, f.fib];
+
+/* ---------- профиль и нормы ---------- */
+const prof = () => S.profiles.find(p => p.id === S.active) || S.profiles[0];
+function norms(pr){
+  const w = pr.weight;
+  const bmr = pr.bf ? 370 + 21.6 * w * (1 - pr.bf/100) : 10*w + 6.25*pr.height - 5*pr.age + (pr.sex === 'm' ? 5 : -161);
+  const tdee = bmr * pr.act;
+  const warn = [];
+  let kcal = Math.round(tdee * (1 + GOALS[pr.goal].k) / 10) * 10;
+  if (kcal < bmr) { kcal = Math.round(bmr/10)*10; warn.push('Калории подняты до базового обмена: есть меньше него не стоит.') }
+  const P = pr.p * w, F = pr.f * w;
+  let ck = kcal - P*4 - F*9;
+  if (ck < 0) { warn.push('Белки и жиры уже занимают все калории. Уменьши г/кг.'); ck = 0 }
+  const C = ck / 4, Sg = Math.min(C, kcal * pr.s / 400), CX = C - Sg;
+  return {bmr, tdee, kcal, P, F, C, S:Sg, CX, fib: kcal/1000*14, water: Math.round(w*33/50)*50, warn};
+}
+function day(k = ui.date, pid = S.active){
+  S.days[pid] ||= {};
+  return S.days[pid][k] ||= {items:[], water:0};
+}
+function peekDay(k, pid = S.active){ return (S.days[pid] || {})[k] }
+function totals(items){
+  const t = {k:0,p:0,f:0,c:0,s:0,fib:0};
+  for (const it of items){ const m = it.g/100, v = it.v; t.k+=v[0]*m; t.p+=v[1]*m; t.f+=v[2]*m; t.c+=v[3]*m; t.s+=v[4]*m; t.fib+=v[5]*m }
+  t.cx = t.c - t.s; return t;
+}
+function cleanupDay(k){ const d = peekDay(k); if (d && !d.items.length && !d.water) delete S.days[S.active][k] }
+
+/* ---------- отрисовка ---------- */
+function render(){
+  if (S.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', S.theme);
+  ui.today = todayKey();
+  $('profiles').innerHTML = S.profiles.map(p => `<button class="pchip" data-act="prof" data-v="${p.id}" aria-pressed="${p.id===S.active}">${esc(p.name)}</button>`).join('');
+  document.querySelectorAll('#tabs [data-act=tab]').forEach(b => b.dataset.v === ui.view ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
+  const v = {today:vToday, progress:vProgress, ref:vRef, me:vMe}[ui.view];
+  $('view').innerHTML = v();
+  if (ui.view === 'me') bindMe();
+  renderSheet();
+}
+
+const ICON = {
+  left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  minus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+  starO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+};
+
+function bar(label, have, goal, color, kind){
+  const pct = goal > 0 ? have/goal : 0;
+  const over = kind === 'max' ? have > goal + 0.5 : pct > 1.15;
+  const w = Math.min(pct, 1) * 100;
+  return `<div class="bar${over?' over':''}"><div class="top"><span>${label}</span><span class="num"><b>${fmt(have)}</b> / ${kind==='max'?'≤':''}${fmt(goal)}</span></div><div class="t"><i style="width:${w}%;background:${over?'var(--bad)':`var(${color})`}"></i></div></div>`;
+}
+
+function vToday(){
+  const pr = prof(), N = norms(pr), d = peekDay(ui.date) || {items:[], water:0}, T = totals(d.items), L = dateLabel(ui.date);
+  const left = N.kcal - T.k, over = left < 0;
+  const R = 54, C = 2*Math.PI*R, frac = Math.min(T.k / N.kcal, 1);
+  let h = '';
+  if (!pr.checked) h += `<div class="card banner"><p><b>${esc(pr.name)}, проверь параметры.</b> Сейчас стоят примерные рост, вес и возраст, от них зависят все нормы.</p><button class="btn primary" data-act="tab" data-v="me">Заполнить профиль</button></div>`;
+  h += `<div class="datebar"><button class="iconbtn" data-act="day" data-v="-1" aria-label="Предыдущий день">${ICON.left}</button>
+    <button class="lbl btn ghost" data-act="day" data-v="0">${L.rel}<small>${L.full}</small></button>
+    <button class="iconbtn" data-act="day" data-v="1" aria-label="Следующий день">${ICON.right}</button></div>`;
+  h += `<div class="card"><div class="summary">
+    <div class="ring"><svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" fill="none" stroke="var(--surface2)" stroke-width="12"/>
+      <circle cx="64" cy="64" r="${R}" fill="none" stroke="${over?'var(--bad)':'var(--accent)'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/></svg>
+      <div class="c"><div><span class="big">${fmt(Math.abs(left))}</span><br><small>${over?'ккал сверх нормы':'ккал осталось'}<br>съедено ${fmt(T.k)} из ${fmt(N.kcal)}</small></div></div></div>
+    <div class="bars">${bar('Белки',T.p,N.P,'--prot')}${bar('Жиры',T.f,N.F,'--fat')}${bar('Сложные У',T.cx,N.CX,'--cx')}${bar('Простые У',T.s,N.S,'--sx','max')}${bar('Клетчатка',T.fib,N.fib,'--fib')}</div>
+  </div></div>`;
+  // подсказка по белку
+  const remP = N.P - T.p;
+  if (ui.date === todayKey() && remP > 15 && d.items.length){
+    const opts = [['41','курицы (варёная грудка)'],['93','творога 5 %'],['75','тунца'],['90','яиц']].map(([id,t]) => {
+      const f = FOOD.get(id); const g = remP / f.p * 100;
+      return id === '90' ? `${fmt(g / f.ug)} ${plural(g/f.ug,'яйцо','яйца','яиц')}` : `${fmt(Math.round(g/10)*10)} г ${t}`;
+    });
+    const eggs = remP / FOOD.get('90').p * 100 / FOOD.get('90').ug;
+    h += `<div class="card hint"><b>До нормы белка ещё ${fmt(remP)} г.</b><span>Это примерно ${eggs <= 6 ? opts.slice(0,3).join(', ')+' или '+opts[3] : opts.slice(0,2).join(', ')+' или '+opts[2]}.</span></div>`;
+  }
+  // вода
+  const glasses = Math.round(d.water / GLASS), goalG = Math.ceil(N.water / GLASS);
+  h += `<div class="card water"><div class="row between"><h2>Вода</h2><span class="num muted small">${fmt(d.water/1000,2)} / ${fmt(N.water/1000,1)} л</span></div>
+    <div class="row"><div class="cups" style="flex:1">${Array.from({length:Math.max(goalG, glasses)}, (_,i) => `<span class="cup${i<glasses?' f':''}"></span>`).join('')}</div>
+    <button class="iconbtn" data-act="water" data-v="-1" aria-label="Минус стакан">${ICON.minus}</button><button class="iconbtn" data-act="water" data-v="1" aria-label="Плюс стакан ${GLASS} мл" style="background:var(--water);color:#fff">${ICON.plus}</button></div></div>`;
+  // приёмы пищи
+  const y = peekDay(shiftKey(ui.date,-1));
+  for (const [m, name] of MEALS){
+    const items = d.items.map((it,i) => [it,i]).filter(([it]) => it.m === m);
+    const mt = totals(items.map(x => x[0]));
+    const yItems = y ? y.items.filter(it => it.m === m) : [];
+    h += `<div class="card"><div class="meal-h"><h2>${name}</h2>${items.length?`<span class="num">${fmt(mt.k)} ккал</span>`:''}<button class="iconbtn" data-act="add" data-meal="${m}" aria-label="Добавить в ${name}">${ICON.plus}</button></div>`;
+    if (items.length){
+      h += `<div class="items">` + items.map(([it,i]) => { const k = it.v[0]*it.g/100, f = it.g/100;
+        return `<button class="item" data-act="edit" data-v="${i}"><span class="n">${esc(it.n)}</span><span class="k">${fmt(k)}</span><span class="m">${fmt(it.g)} г · Б ${fmt(it.v[1]*f)} · Ж ${fmt(it.v[2]*f)} · У ${fmt(it.v[3]*f)}</span></button>` }).join('') + `</div>`;
+    } else {
+      h += `<div class="addline"><span class="empty">Пока ничего.</span>${yItems.length?`<button class="btn" data-act="copyY" data-meal="${m}">Как вчера (${yItems.length})</button>`:''}</div>`;
+    }
+    h += `</div>`;
+  }
+  h += `<p class="muted small" style="text-align:center">Итого за день: Б ${fmt(T.p)} · Ж ${fmt(T.f)} · У ${fmt(T.c)} (из них простые ${fmt(T.s)}) · клетчатка ${fmt(T.fib)} г</p>`;
+  return h;
+}
+
+/* ---------- шторка добавления ---------- */
+function openAdd(meal){
+  const h = new Date().getHours();
+  meal ||= h < 11 ? 'b' : h < 16 ? 'l' : h < 21 ? 'd' : 's';
+  ui.sheet = {mode:'list', meal, q:'', cat:null};
+  renderSheet(true);
+}
+function openEdit(i){
+  const it = day().items[i];
+  ui.sheet = {mode:'amount', edit:i, meal:it.m, fid:it.fid, g:it.g, snap:it};
+  renderSheet(true);
+}
+function closeSheet(){ ui.sheet = null; renderSheet() }
+
+function foodRow(f){
+  return `<button class="fitem" data-act="pick" data-v="${esc(f.id)}"><span class="n">${esc(f.n)}</span><span class="k">${fmt(f.k)} ккал</span><span class="m">Б ${fmt(f.p,1)} · Ж ${fmt(f.f,1)} · У ${fmt(f.c,1)}${f.un?` · 1 ${esc(f.un)} = ${f.ug} г`:''}${f.custom?' · свой':''}</span></button>`;
+}
+function searchFoods(q, cat){
+  const toks = norm(q).split(/\s+/).filter(Boolean);
+  let list = [...FOOD.values()];
+  if (cat !== null) list = list.filter(f => f.cat === cat);
+  if (toks.length) list = list.filter(f => { const n = norm(f.n); return toks.every(t => n.includes(t)) });
+  if (toks.length) list.sort((a,b) => (norm(a.n).startsWith(toks[0]) ? 0 : 1) - (norm(b.n).startsWith(toks[0]) ? 0 : 1));
+  return list;
+}
+function sheetList(){
+  const s = ui.sheet;
+  const cats = [[-1,'Мои'], ...window.CATS.map((c,i) => [i,c])];
+  let h = `<div class="seg" role="group" aria-label="Приём пищи">${MEALS.map(([m,n]) => `<button data-act="smeal" data-v="${m}" aria-pressed="${s.meal===m}">${n}</button>`).join('')}</div>
+    <div class="search">${ICON.search}<input id="q" type="search" placeholder="Найти продукт: гречка, творог…" value="${esc(s.q)}" autocomplete="off"></div>
+    <div class="chips">${cats.map(([i,c]) => `<button class="chip" data-act="cat" data-v="${i}" aria-pressed="${s.cat===i}">${esc(c)}</button>`).join('')}</div>
+    <div id="results">${sheetResults()}</div>
+    <button class="btn block" data-act="custom-new">+ Свой продукт (по этикетке)</button>`;
+  return h;
+}
+function sheetResults(){
+  const s = ui.sheet;
+  if (s.q.trim() || s.cat !== null){
+    const list = searchFoods(s.q, s.cat);
+    if (!list.length) return `<p class="empty">Ничего не нашлось. Попробуй короче («греч») или добавь свой продукт.</p>`;
+    return `<div class="flist">${list.slice(0,80).map(foodRow).join('')}</div>`;
+  }
+  const fav = (S.fav[S.active] || []).map(id => FOOD.get(id)).filter(Boolean);
+  const rec = (S.recent[S.active] || []).map(id => FOOD.get(id)).filter(f => f && !fav.includes(f)).slice(0,12);
+  let h = '';
+  if (fav.length) h += `<p class="sec-t">Избранное</p><div class="flist">${fav.map(foodRow).join('')}</div>`;
+  if (rec.length) h += `<p class="sec-t" style="margin-top:12px">Недавние</p><div class="flist">${rec.map(foodRow).join('')}</div>`;
+  if (!h) h = `<p class="empty">Начни вводить название или выбери категорию. Продукты, которые ты добавляешь, появятся здесь в «Недавних», а звёздочкой можно отметить избранные.</p>`;
+  return h;
+}
+function sheetAmount(){
+  const s = ui.sheet;
+  const f = FOOD.get(s.fid) || {n:s.snap.n, k:s.snap.v[0], p:s.snap.v[1], f:s.snap.v[2], c:s.snap.v[3], s:s.snap.v[4], fib:s.snap.v[5], id:s.fid};
+  const v = s.snap ? s.snap.v : vec(f);
+  const g = num(s.g), m = (isFinite(g) ? g : 0)/100;
+  const isFav = (S.fav[S.active] || []).includes(s.fid);
+  const quick = [];
+  if (f.un) [1,2,3].forEach(n => quick.push([n*f.ug, `${n} ${f.un}`]));
+  [50,100,150,200,250].forEach(x => quick.push([x, x+' г']));
+  return `<div class="row"><div style="flex:1;min-width:0"><h3 style="font-size:1.1rem">${esc(f.n)}</h3><p class="per100">на 100 г: ${fmt(v[0])} ккал · Б ${fmt(v[1],1)} · Ж ${fmt(v[2],1)} · У ${fmt(v[3],1)} (сахара ${fmt(v[4],1)}) · клетч. ${fmt(v[5],1)}</p></div>
+    ${FOOD.has(s.fid)?`<button class="star" data-act="fav" aria-pressed="${isFav}" aria-label="Избранное">${isFav?ICON.star:ICON.starO}</button>`:''}</div>
+    <div class="seg" role="group" aria-label="Приём пищи">${MEALS.map(([mm,n]) => `<button data-act="smeal" data-v="${mm}" aria-pressed="${s.meal===mm}">${n}</button>`).join('')}</div>
+    <div class="amount"><input id="amt" inputmode="decimal" value="${esc(s.g)}" aria-label="Граммы"><span>г</span></div>
+    <div class="chips">${quick.map(([x,t]) => `<button class="chip" data-act="amt" data-v="${x}">${esc(t)}</button>`).join('')}</div>
+    <div class="preview" id="pv">${previewHtml(v,m)}</div>
+    <div class="row">${s.edit!=null?`<button class="btn danger" data-act="do-del">Удалить</button>`:''}<button class="btn primary block" data-act="${s.edit!=null?'do-save':'do-add'}">${s.edit!=null?'Сохранить':'Добавить: '+MEAL_NAME[s.meal]}</button></div>`;
+}
+function previewHtml(v, m){
+  return `<div><b>${fmt(v[0]*m)}</b><span>ккал</span></div><div><b style="color:var(--prot)">${fmt(v[1]*m)}</b><span>белки</span></div><div><b style="color:var(--fat)">${fmt(v[2]*m)}</b><span>жиры</span></div><div><b style="color:var(--cx)">${fmt(v[3]*m)}</b><span>углев.${v[4]>0?`<br>из них прост. ${fmt(v[4]*m)}`:''}</span></div>`;
+}
+function sheetCustom(){
+  return `<p class="muted small">Перепиши с этикетки значения <b>на 100 г</b>. Калорийность можно не вводить, она посчитается сама.</p>
+    <div class="field"><label for="cn">Название</label><input id="cn" type="text" placeholder="Например: Йогурт Teos 2 %"></div>
+    <div class="grid3">
+      <div class="field"><label for="cp">Белки, г</label><input id="cp" inputmode="decimal"></div>
+      <div class="field"><label for="cf">Жиры, г</label><input id="cf" inputmode="decimal"></div>
+      <div class="field"><label for="cc">Углеводы, г</label><input id="cc" inputmode="decimal"></div>
+      <div class="field"><label for="cs">из них сахара</label><input id="cs" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label for="cfib">Клетчатка</label><input id="cfib" inputmode="decimal" placeholder="0"></div>
+      <div class="field"><label for="ck">Ккал</label><input id="ck" inputmode="decimal" placeholder="авто"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="cun">Порция (необяз.)</label><input id="cun" type="text" placeholder="шт, банка…"></div>
+      <div class="field"><label for="cug">Грамм в порции</label><input id="cug" inputmode="decimal"></div>
+    </div>
+    <p class="warnt" id="cerr" hidden></p>
+    <button class="btn primary block" data-act="custom-save">Сохранить продукт</button>`;
+}
+function renderSheet(fresh){
+  const s = ui.sheet, el = $('sheet');
+  if (!s){ el.innerHTML = ''; return }
+  const title = s.mode === 'list' ? 'Добавить еду' : s.mode === 'custom' ? 'Свой продукт' : s.edit != null ? 'Изменить' : 'Сколько грамм?';
+  const back = s.mode !== 'list' && s.edit == null;
+  const body = s.mode === 'list' ? sheetList() : s.mode === 'custom' ? sheetCustom() : sheetAmount();
+  el.innerHTML = `<div class="sheet-bg" data-act="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-label="${title}">
+    <div class="sheet-h">${back?`<button class="iconbtn" data-act="sheet-back" aria-label="Назад">${ICON.left}</button>`:''}<h2>${title}</h2><button class="iconbtn" data-act="sheet-close" aria-label="Закрыть">${ICON.close}</button></div>
+    <div class="sheet-b">${body}</div></div></div>`;
+  if (fresh || s.mode !== 'list'){
+    const inp = s.mode === 'list' ? $('q') : s.mode === 'amount' ? $('amt') : $('cn');
+    if (inp && fresh){ inp.focus({preventScroll:true}); if (inp.select && s.mode === 'amount') inp.select() }
+  }
+}
+
+/* ---------- прогресс ---------- */
+function vProgress(){
+  const pr = prof(), N = norms(pr), W = (S.weights[S.active] || []).slice().sort((a,b) => a.d < b.d ? -1 : 1);
+  const today = todayKey(), tw = W.find(x => x.d === today);
+  let h = `<div class="card"><h2>Вес</h2><div class="row"><div class="field" style="flex:1"><label for="wIn">Вес сегодня, кг</label><input id="wIn" inputmode="decimal" value="${tw?fmt(tw.kg,1):''}" placeholder="${fmt(pr.weight,1)}"></div><button class="btn primary" data-act="weight-save" style="align-self:flex-end">Записать</button></div>
+    <p class="muted small">Взвешивайся утром натощак. Вес скачет на 0,5–1,5 кг из-за воды и соли, поэтому смотри на линию тренда (среднее за 7 дней). Записанный вес сразу пересчитывает нормы.</p>`;
+  h += W.length >= 2 ? weightChart(W.slice(-90)) : `<p class="empty">Запиши вес хотя бы два дня, и здесь появится график.</p>`;
+  h += `</div>`;
+  // неделя
+  const rows = []; let n = 0, sum = {k:0,p:0,f:0,c:0,s:0};
+  for (let i = 6; i >= 0; i--){
+    const k = shiftKey(today, -i), d = peekDay(k), T = totals(d ? d.items : []), L = dateLabel(k);
+    let pill = '<span class="pill none">—</span>';
+    if (d && d.items.length){
+      n++; for (const x in sum) sum[x] += T[x];
+      const r = T.k / N.kcal, cls = Math.abs(r-1) <= .1 ? 'ok' : Math.abs(r-1) <= .2 ? 'warn' : 'bad';
+      pill = `<span class="pill ${cls}">${fmt(r*100)} %</span>`;
+    }
+    rows.push(`<tr><td>${L.rel === 'Сегодня' || L.rel === 'Вчера' ? L.rel : L.full}</td><td class="num">${d&&d.items.length?fmt(T.k):'—'}</td><td class="num">${pill}</td><td class="num">${d&&d.items.length?fmt(T.p):'—'}</td><td class="num">${d&&d.items.length?fmt(T.s):'—'}</td></tr>`);
+  }
+  h += `<div class="card"><h2>Последние 7 дней</h2><div class="tbl"><table><thead><tr><th>День</th><th class="num">Ккал</th><th class="num">Норма</th><th class="num">Белки, г</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+  if (n){
+    h += `<div class="norms"><span>Среднее в день</span><span class="num">${fmt(sum.k/n)} ккал</span><span class="gk">норма ${fmt(N.kcal)}</span>
+      <span><span class="dot" style="background:var(--prot)"></span>Белки</span><span class="num">${fmt(sum.p/n)} г</span><span class="gk">${fmt(sum.p/n/pr.weight,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--fat)"></span>Жиры</span><span class="num">${fmt(sum.f/n)} г</span><span class="gk">${fmt(sum.f/n/pr.weight,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--cx)"></span>Углеводы</span><span class="num">${fmt(sum.c/n)} г</span><span class="gk">${fmt(sum.c/n/pr.weight,1)} г/кг</span></div>
+      <p class="muted small">Считаются только дни, где что-то записано: ${n} из 7.</p>`;
+  } else h += `<p class="empty">За неделю пока нет записей.</p>`;
+  h += `</div>`;
+  return h;
+}
+function weightChart(W){
+  const Wd = 320, H = 170, pl = 36, pr_ = 10, pt = 12, pb = 24;
+  const t0 = parseKey(W[0].d).getTime(), t1 = parseKey(W[W.length-1].d).getTime(), span = Math.max(t1 - t0, 864e5);
+  const trend = W.map((p,i) => { const t = parseKey(p.d).getTime(); const win = W.filter(q => { const tq = parseKey(q.d).getTime(); return tq <= t && tq > t - 7*864e5 }); return win.reduce((a,q) => a+q.kg, 0)/win.length });
+  const all = W.map(p => p.kg).concat(trend);
+  let lo = Math.floor(Math.min(...all) - .5), hi = Math.ceil(Math.max(...all) + .5);
+  const X = d => pl + (parseKey(d).getTime() - t0)/span*(Wd-pl-pr_), Y = v => pt + (hi - v)/(hi - lo)*(H-pt-pb);
+  const step = Math.max(1, Math.ceil((hi-lo)/4));
+  let grid = '';
+  for (let v = lo; v <= hi; v += step) grid += `<line x1="${pl}" x2="${Wd-pr_}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${Y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;
+  const pts = W.map(p => `<circle cx="${X(p.d)}" cy="${Y(p.kg)}" r="2.6" fill="var(--muted)" opacity=".7"/>`).join('');
+  const tl = W.map((p,i) => `${i?'L':'M'}${X(p.d).toFixed(1)},${Y(trend[i]).toFixed(1)}`).join('');
+  const last = W[W.length-1], lt = trend[trend.length-1];
+  const fl = d => { const x = parseKey(d); return x.getDate()+' '+MON[x.getMonth()].slice(0,3) };
+  const delta = lt - trend[0];
+  return `<div class="chart"><svg viewBox="0 0 ${Wd} ${H}" role="img" aria-label="График веса">${grid}${pts}
+    <path d="${tl}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${X(last.d)}" cy="${Y(lt)}" r="4.5" fill="var(--accent)"/>
+    <text x="${pl}" y="${H-6}" font-size="10" fill="var(--muted)">${fl(W[0].d)}</text><text x="${Wd-pr_}" y="${H-6}" font-size="10" fill="var(--muted)" text-anchor="end">${fl(last.d)}</text></svg></div>
+    <p class="small">Тренд сейчас <b class="num">${fmt(lt,1)} кг</b>, за период <b class="num">${delta>0?'+':''}${fmt(delta,1)} кг</b>.</p>`;
+}
+
+/* ---------- справка ---------- */
+function vRef(){
+  const pr = prof(), N = norms(pr), w = pr.weight, f = pr.sex === 'f';
+  const topBy = (key, n=10) => [...FOOD.values()].filter(x => !x.custom && x.k > 30).sort((a,b) => b[key]-a[key]).slice(0,n);
+  const protRows = [...FOOD.values()].filter(x => !x.custom && x.p >= 15 && x.cat !== 7).sort((a,b) => b.p/b.k - a.p/a.k).slice(0,14)
+    .map(x => `<tr><td>${esc(x.n)}</td><td class="num">${fmt(x.p,1)}</td><td class="num">${fmt(x.p/x.k*100,1)}</td><td class="num">${fmt(30/x.p*100)}</td></tr>`).join('');
+  const fibRows = topBy('fib', 12).map(x => `<tr><td>${esc(x.n)}</td><td class="num">${fmt(x.fib,1)}</td><td class="num">${fmt(x.k)}</td></tr>`).join('');
+  const gi = [['Перловка','lo',25],['Чечевица, фасоль, нут','lo',30],['Молоко, йогурт, кефир','lo',35],['Яблоко, груша','lo',38],['Апельсин','lo',43],['Макароны из твёрдых сортов (al dente)','lo',50],['Гречка','lo',50],['Овсянка из цельных хлопьев','lo',55],['Банан спелый','mid',60],['Хлеб ржаной','mid',65],['Сахар (сахароза)','mid',65],['Рис бурый','mid',65],['Кускус','mid',65],['Рис белый','hi',73],['Хлеб белый, батон','hi',75],['Арбуз','hi',75],['Картофель варёный','hi',78],['Кукурузные хлопья','hi',80],['Картофельное пюре','hi',85]]
+    .map(([n,c,v]) => `<tr><td>${n}</td><td class="num"><span class="gi ${c}">${v}</span></td></tr>`).join('');
+  const micro = [
+    ['Железо', '10 мг', '18 мг', 'говядина, печень, гречка, чечевица, шпинат; с овощами и фруктами (витамин C помогает усвоению)'],
+    ['Кальций', '1000 мг', '1000 мг', 'творог, сыр, кефир, кунжут, рыба с костями (шпроты, сардины)'],
+    ['Витамин D', '15 мкг (600 МЕ)', '15 мкг (600 МЕ)', 'жирная рыба, яйца. Осенью и зимой солнца мало: стоит сдать анализ 25(OH)D и обсудить добавку с врачом'],
+    ['Магний', '420 мг', '420 мг', 'гречка, орехи, семечки, бобовые, горький шоколад'],
+    ['Омега-3', '250–500 мг', '250–500 мг', 'жирная рыба (сёмга, скумбрия, сельдь) 2 раза в неделю; лён и чиа (менее эффективная форма)'],
+    ['Витамин B12', '3 мкг', '3 мкг', 'мясо, рыба, яйца, молочное'],
+    ['Йод', '150 мкг', '150 мкг', 'йодированная соль, морская рыба, морская капуста'],
+    ['Фолаты (B9)', '400 мкг', '400 мкг', 'зелень, брокколи, бобовые, печень. Особенно важны при планировании беременности'],
+    ['Витамин C', '100 мг', '100 мг', 'болгарский перец, киви, цитрусовые, капуста (и квашеная)'],
+  ].map(([n,m,ff,src]) => `<tr><td><b>${n}</b><br><span class="muted small">${src}</span></td><td class="num" ${!f?'style="font-weight:600"':''}>${m}</td><td class="num" ${f?'style="font-weight:600"':''}>${ff}</td></tr>`).join('');
+  return `
+  <details class="ref" open><summary>Мои нормы: ${esc(pr.name)}</summary><div class="body">
+    <div class="norms">
+      <span>Калории</span><span class="num">${fmt(N.kcal)} ккал</span><span class="gk">${fmt(N.kcal/w)} на кг</span>
+      <span><span class="dot" style="background:var(--prot)"></span>Белки</span><span class="num">${fmt(N.P)} г</span><span class="gk">${fmt(pr.p,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--fat)"></span>Жиры</span><span class="num">${fmt(N.F)} г</span><span class="gk">${fmt(pr.f,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--cx)"></span>Сложные углеводы</span><span class="num">${fmt(N.CX)} г</span><span class="gk">${fmt(N.CX/w,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--sx)"></span>Простые, макс.</span><span class="num">${fmt(N.S)} г</span><span class="gk">${pr.s} % ккал</span>
+      <span><span class="dot" style="background:var(--fib)"></span>Клетчатка</span><span class="num">${fmt(N.fib)} г</span><span class="gk"></span>
+      <span><span class="dot" style="background:var(--water)"></span>Вода</span><span class="num">${fmt(N.water/1000,1)} л</span><span class="gk">33 мл/кг</span>
+    </div>
+    <p class="muted small">Базовый обмен ${fmt(N.bmr)} ккал, расход за день ${fmt(N.tdee)} ккал. Цель: ${GOALS[pr.goal].t.toLowerCase()}.</p>
+  </div></details>
+
+  <details class="ref"><summary>Нормы в г/кг под цель</summary><div class="body">
+    <div class="tbl"><table><thead><tr><th></th><th class="num">Худеем</th><th class="num">Держим</th><th class="num">Набор</th></tr></thead><tbody>
+      <tr><td>Белки</td><td class="num">2,0–2,2</td><td class="num">1,6–1,8</td><td class="num">1,8–2,0</td></tr>
+      <tr><td>Жиры</td><td class="num">0,8</td><td class="num">0,9–1,0</td><td class="num">1,0</td></tr>
+      <tr><td>Углеводы</td><td colspan="3">остаток калорий</td></tr>
+      <tr><td>Простые</td><td class="num">≤ 5–7 %</td><td class="num">≤ 10 %</td><td class="num">≤ 10 %</td></tr>
+      <tr><td>Калории</td><td class="num">−15…20 %</td><td class="num">расход</td><td class="num">+10 %</td></tr>
+    </tbody></table></div>
+    <ul><li>На похудении белка больше: он сохраняет мышцы и дольше насыщает.</li><li>Жиры ниже 0,6 г/кг не опускать: на них держатся гормоны.</li><li>Худеть разумно на 0,5–1 % веса в неделю. Быстрее уходят вода и мышцы.</li><li>Если две недели вес стоит, уменьши калории ещё на 100–150 ккал или добавь шагов.</li></ul>
+  </div></details>
+
+  <details class="ref"><summary>Сложные и простые углеводы</summary><div class="body">
+    <p><b style="color:var(--cx)">Сложные</b> (крахмал): крупы, хлеб, макароны, картофель, бобовые. Перевариваются дольше, сахар крови растёт плавно. Лучше цельные и с клетчаткой.</p>
+    <p><b style="color:var(--sx)">Простые</b> (сахара): сахар, мёд, сладости, соки, газировка, а также фрукты и молоко. ВОЗ советует держать <i>добавленный</i> сахар ниже 10 % калорий. Сахар из целых фруктов и молочного вреден меньше, но в приложении он тоже считается простым.</p>
+    <p class="sec-t">Гликемический индекс (≈)</p>
+    <div class="tbl"><table><thead><tr><th>Продукт</th><th class="num">ГИ</th></tr></thead><tbody>${gi}</tbody></table></div>
+    <p class="muted small">До 55 низкий, 56–69 средний, от 70 высокий. ГИ снижают белок, жир, клетчатка в той же еде и варка «на зубок».</p>
+  </div></details>
+
+  <details class="ref"><summary>Где взять белок</summary><div class="body">
+    <p class="muted small">Отсортировано по «белку на калорию»: чем выше, тем меньше лишних калорий на тот же белок.</p>
+    <div class="tbl"><table><thead><tr><th>Продукт</th><th class="num">Б на 100 г</th><th class="num">Б на 100 ккал</th><th class="num">г на 30 г Б</th></tr></thead><tbody>${protRows}</tbody></table></div>
+    <p class="muted small">30 г белка за приём пищи: примерно столько усваивается для мышц за раз. Удобная цель на каждый из 3–4 приёмов.</p>
+  </div></details>
+
+  <details class="ref"><summary>Клетчатка</summary><div class="body">
+    <p>Норма около 14 г на 1000 ккал, обычно 25–40 г в день. Насыщает, кормит кишечную микрофлору, сглаживает сахар крови. Добавляй постепенно и пей воду.</p>
+    <div class="tbl"><table><thead><tr><th>Продукт</th><th class="num">Клетч., г/100 г</th><th class="num">Ккал</th></tr></thead><tbody>${fibRows}</tbody></table></div>
+  </div></details>
+
+  <details class="ref"><summary>Порции «на глаз» рукой</summary><div class="body">
+    <div class="tbl"><table><thead><tr><th>Мерка</th><th>Что</th><th>Примерно</th></tr></thead><tbody>
+      <tr><td><b>Ладонь</b> (размер и толщина)</td><td>мясо, рыба, творог</td><td class="num">100–120 г ≈ 20–30 г белка</td></tr>
+      <tr><td><b>Кулак</b></td><td>овощи, готовая крупа, макароны</td><td class="num">≈ 150 г</td></tr>
+      <tr><td><b>Горсть</b> (сложенная ладонь)</td><td>орехи, ягоды, сухие хлопья</td><td class="num">орехи ≈ 30 г</td></tr>
+      <tr><td><b>Большой палец</b></td><td>масло, ореховая паста, сыр</td><td class="num">≈ 1 ст. л., 10–15 г жира</td></tr>
+    </tbody></table></div>
+    <p class="muted small">Простой ориентир на тарелку: половина овощи, четверть белок, четверть гарнир.</p>
+  </div></details>
+
+  <details class="ref"><summary>Калорийность грамма и полезные цифры</summary><div class="body">
+    <div class="tbl"><table><tbody>
+      <tr><td>1 г белка</td><td class="num">4 ккал</td></tr><tr><td>1 г углеводов</td><td class="num">4 ккал</td></tr>
+      <tr><td>1 г жира</td><td class="num">9 ккал</td></tr><tr><td>1 г алкоголя</td><td class="num">7 ккал</td></tr>
+      <tr><td>1 г клетчатки</td><td class="num">≈ 2 ккал</td></tr><tr><td>1 кг жира тела</td><td class="num">≈ 7 700 ккал</td></tr>
+    </tbody></table></div>
+    <ul><li>Крупы разваривают в 2,5–3 раза: 60 г сухой гречки ≈ 170 г варёной. Удобнее взвешивать сухую.</li><li>Мясо при жарке и варке теряет 25–35 % веса, калории на 100 г растут.</li><li>Масло для жарки тоже считается: 1 ст. л. ≈ 150 ккал.</li></ul>
+  </div></details>
+
+  <details class="ref"><summary>Вода</summary><div class="body">
+    <p>30–35 мл на кг веса: для ${esc(pr.name)} это <b class="num">${fmt(w*0.03,1)}–${fmt(w*0.035,1)} л</b>. Плюс 0,5 л на час тренировки и больше в жару. Чай, кофе, супы, кефир тоже считаются. Простой контроль: светлая моча.</p>
+  </div></details>
+
+  <details class="ref"><summary>Витамины и минералы</summary><div class="body">
+    <p class="muted small">Считать их в дневнике не нужно: при разнообразной еде с овощами, рыбой и молочным нормы обычно набираются. Ниже то, на что чаще всего не хватает. Нормы для взрослых по МР 2.3.1.0253-21; выделена колонка ${f?'для женщины':'для мужчины'}.</p>
+    <div class="tbl"><table><thead><tr><th>Что и где взять</th><th class="num">Муж.</th><th class="num">Жен.</th></tr></thead><tbody>${micro}</tbody></table></div>
+    <p class="muted small">Добавки (витамин D, железо, омега-3) лучше подбирать по анализам вместе с врачом.</p>
+  </div></details>
+
+  <details class="ref"><summary>Таблица продуктов</summary><div class="body">
+    <div class="search">${ICON.search}<input id="rq" type="search" placeholder="Найти продукт" autocomplete="off"></div>
+    <div id="rres"><p class="muted small">Значения на 100 г. Начни вводить название.</p></div>
+  </div></details>
+  <p class="muted small" style="text-align:center">Справка для учёта питания, не медицинская консультация.</p>`;
+}
+
+/* ---------- профиль ---------- */
+function vMe(){
+  const pr = prof();
+  const g = Object.entries(GOALS).map(([k,v]) => `<option value="${k}" ${pr.goal===k?'selected':''}>${v.t}</option>`).join('');
+  const a = ACTS.map(([v,t]) => `<option value="${v}" ${pr.act===v?'selected':''}>${t}</option>`).join('');
+  let h = `<div class="card"><div class="row between"><h2>Профиль: ${esc(pr.name)}</h2></div>
+    <div class="field"><label for="mName">Имя</label><input id="mName" type="text" value="${esc(pr.name)}"></div>
+    <div class="field"><label>Пол</label><div class="seg"><button data-act="sex" data-v="m" aria-pressed="${pr.sex==='m'}">Мужской</button><button data-act="sex" data-v="f" aria-pressed="${pr.sex==='f'}">Женский</button></div></div>
+    <div class="grid3">
+      <div class="field"><label for="mAge">Возраст</label><input id="mAge" inputmode="numeric" value="${pr.age}"></div>
+      <div class="field"><label for="mH">Рост, см</label><input id="mH" inputmode="numeric" value="${pr.height}"></div>
+      <div class="field"><label for="mW">Вес, кг</label><input id="mW" inputmode="decimal" value="${fmt(pr.weight,1)}"></div>
+    </div>
+    <div class="field"><label for="mBf">% жира в теле (если знаешь, иначе пусто)</label><input id="mBf" inputmode="decimal" value="${pr.bf??''}" placeholder="например, 18"></div>
+    <div class="field"><label for="mAct">Активность</label><select id="mAct">${a}</select></div>
+    <div class="field"><label for="mGoal">Цель</label><select id="mGoal">${g}</select></div>
+  </div>
+  <div class="card"><div class="row between"><h2>Нормы в г/кг</h2><button class="btn" data-act="reco">Рекомендованные</button></div>
+    <div class="field"><label for="mP">Белки, г/кг <b id="mPv">${fmt(pr.p,1)}</b></label><input id="mP" type="range" min="1.2" max="2.6" step="0.1" value="${pr.p}"></div>
+    <div class="field"><label for="mF">Жиры, г/кг <b id="mFv">${fmt(pr.f,1)}</b></label><input id="mF" type="range" min="0.6" max="1.5" step="0.1" value="${pr.f}"></div>
+    <div class="field"><label for="mS">Простые углеводы, макс. % калорий <b id="mSv">${pr.s} %</b></label><input id="mS" type="range" min="0" max="20" step="1" value="${pr.s}"></div>
+    <div id="meOut"></div>
+  </div>`;
+  // профили
+  const conf = ui.confirm;
+  h += `<div class="card"><h2>Кто пользуется</h2>
+    <div class="flist">${S.profiles.map(p => `<div class="fitem" style="cursor:default"><span class="n">${esc(p.name)}${p.id===S.active?' <span class="muted small">(выбран)</span>':''}</span><span>${S.profiles.length>1?`<button class="btn ghost danger small" data-act="pdel" data-v="${p.id}">Удалить</button>`:''}</span></div>`).join('')}</div>
+    ${conf && conf.t==='pdel' ? `<div class="confirm"><span>Удалить профиль «${esc(S.profiles.find(p=>p.id===conf.id)?.name)}» вместе с его дневником и весом?</span><button class="btn danger" data-act="pdel-yes">Удалить</button><button class="btn" data-act="cancel">Отмена</button></div>`:''}
+    <button class="btn" data-act="padd">+ Добавить человека</button>
+    <p class="muted small">Каждый профиль со своим дневником, весом и нормами. Переключение в шапке.</p></div>`;
+  // свои продукты
+  if (S.custom.length) h += `<div class="card"><h2>Мои продукты</h2><div class="flist">${S.custom.map(c => `<div class="fitem" style="cursor:default"><span class="n">${esc(c.n)}</span><button class="btn ghost danger small" data-act="cdel" data-v="${c.id}">Удалить</button><span class="m">${fmt(c.k)} ккал · Б ${fmt(c.p,1)} · Ж ${fmt(c.f,1)} · У ${fmt(c.c,1)}</span></div>`).join('')}</div>
+    ${conf && conf.t==='cdel' ? `<div class="confirm"><span>Удалить «${esc(S.custom.find(c=>c.id===conf.id)?.n)}» из списка? Уже записанная еда останется в дневнике.</span><button class="btn danger" data-act="cdel-yes">Удалить</button><button class="btn" data-act="cancel">Отмена</button></div>`:''}</div>`;
+  // данные
+  h += `<div class="card"><h2>Данные</h2>
+    <p class="small">Всё хранится только в этом телефоне, в браузере. Раз в неделю-две сохраняй копию: если очистить данные браузера или сменить телефон, без копии записи пропадут.</p>
+    <div class="row wrap"><button class="btn primary" data-act="export">Сохранить копию</button><button class="btn" data-act="import">Восстановить из файла</button></div>
+    ${conf && conf.t==='import' ? `<div class="confirm"><span>Заменить все данные на этом телефоне данными из файла (${conf.info})?</span><button class="btn danger" data-act="import-yes">Заменить</button><button class="btn" data-act="cancel">Отмена</button></div>`:''}
+  </div>
+  <div class="card"><h2>Оформление</h2><div class="seg">${[['auto','Как в телефоне'],['light','Светлая'],['dark','Тёмная']].map(([v,t]) => `<button data-act="theme" data-v="${v}" aria-pressed="${S.theme===v}">${t}</button>`).join('')}</div></div>
+  <div class="card"><h2>Установка на телефон</h2>
+    ${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? '<p>Приложение установлено. Работает и без интернета.</p>' :
+    `<p class="small"><b>Android (Chrome):</b> меню ⋮ → «Добавить на главный экран» или «Установить приложение».</p><p class="small"><b>iPhone (Safari):</b> кнопка «Поделиться» → «На экран „Домой“».</p>`}
+    <p class="muted small">Версия ${VERSION}</p></div>`;
+  return h;
+}
+function meOut(){
+  const pr = prof(), N = norms(pr), w = pr.weight;
+  const parts = [[N.P*4,'--prot'],[N.F*9,'--fat'],[N.CX*4,'--cx'],[N.S*4,'--sx']];
+  $('meOut').innerHTML = `<div class="row" style="align-items:baseline;gap:8px;margin-top:6px"><span class="big-k">${fmt(N.kcal)}</span><span class="muted">ккал в день</span></div>
+    <p class="muted small">Базовый обмен ${fmt(N.bmr)} (${pr.bf?'по % жира':'Миффлин — Сан Жеор'}) × активность ${String(pr.act).replace('.',',')} = расход ${fmt(N.tdee)} ккал${GOALS[pr.goal].k?`, ${GOALS[pr.goal].k>0?'+':'−'}${Math.abs(GOALS[pr.goal].k*100)} % под цель`:''}.</p>
+    <div class="stack" style="margin:10px 0">${parts.map(([k,c]) => `<i style="width:${N.kcal?k/N.kcal*100:0}%;background:var(${c})"></i>`).join('')}</div>
+    <div class="norms">
+      <span><span class="dot" style="background:var(--prot)"></span>Белки</span><span class="num">${fmt(N.P)} г</span><span class="gk">${fmt(N.P*4/N.kcal*100)} %</span>
+      <span><span class="dot" style="background:var(--fat)"></span>Жиры</span><span class="num">${fmt(N.F)} г</span><span class="gk">${fmt(N.F*9/N.kcal*100)} %</span>
+      <span><span class="dot" style="background:var(--cx)"></span>Сложные углеводы</span><span class="num">${fmt(N.CX)} г</span><span class="gk">${fmt(N.CX/w,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--sx)"></span>Простые, макс.</span><span class="num">${fmt(N.S)} г</span><span class="gk">${fmt(N.S/w,1)} г/кг</span>
+      <span><span class="dot" style="background:var(--fib)"></span>Клетчатка</span><span class="num">${fmt(N.fib)} г</span><span class="gk"></span>
+      <span><span class="dot" style="background:var(--water)"></span>Вода</span><span class="num">${fmt(N.water/1000,1)} л</span><span class="gk"></span>
+    </div>${N.warn.length?`<p class="warnt">${N.warn.join(' ')}</p>`:''}`;
+}
+function bindMe(){ meOut() }
+
+/* ---------- действия ---------- */
+let lastDeleted = null;
+function toast(msg, undo){
+  const el = $('toast');
+  el.innerHTML = `<div class="toast" role="status"><span>${esc(msg)}</span>${undo?'<button data-act="undo">Вернуть</button>':''}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.innerHTML = '', undo ? 5000 : 2200);
+}
+function pushRecent(fid){
+  const r = S.recent[S.active] ||= [];
+  const i = r.indexOf(fid); if (i >= 0) r.splice(i,1);
+  r.unshift(fid); if (r.length > 30) r.length = 30;
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const a = t.dataset.act, v = t.dataset.v;
+  if (a === 'sheet-bg' && e.target !== t) return;
+  switch (a){
+    case 'tab': ui.view = v; ui.confirm = null; window.scrollTo(0,0); render(); break;
+    case 'prof': S.active = v; save(); ui.confirm = null; render(); break;
+    case 'day': ui.date = v === '0' ? todayKey() : shiftKey(ui.date, +v); render(); break;
+    case 'add': if (ui.view !== 'today'){ ui.view = 'today'; render() } openAdd(t.dataset.meal); break;
+    case 'edit': openEdit(+v); break;
+    case 'water': { const d = day(); d.water = Math.max(0, d.water + GLASS * +v); cleanupDay(ui.date); save(); render(); break }
+    case 'copyY': { const y = peekDay(shiftKey(ui.date,-1)); const d = day(); const its = y.items.filter(it => it.m === t.dataset.meal);
+      its.forEach(it => d.items.push({...it, id:uid()})); save(); render(); toast(`${MEAL_NAME[t.dataset.meal]}: скопировано ${its.length} ${plural(its.length,'блюдо','блюда','блюд')}`); break }
+    case 'sheet-bg': case 'sheet-close': closeSheet(); break;
+    case 'sheet-back': ui.sheet = {mode:'list', meal:ui.sheet.meal, q:ui.sheet.q||'', cat:ui.sheet.cat??null}; renderSheet(); break;
+    case 'smeal': ui.sheet.meal = v; renderSheet(); break;
+    case 'cat': { const c = +v; ui.sheet.cat = ui.sheet.cat === c ? null : c; renderSheet(); break }
+    case 'pick': { const s = ui.sheet; const f = FOOD.get(v);
+      ui.sheet = {mode:'amount', meal:s.meal, fid:v, g: f.un ? String(f.ug) : '100', q:s.q, cat:s.cat}; renderSheet(true); break }
+    case 'amt': ui.sheet.g = v; renderSheet(); break;
+    case 'fav': { const fv = S.fav[S.active] ||= []; const i = fv.indexOf(ui.sheet.fid); i >= 0 ? fv.splice(i,1) : fv.unshift(ui.sheet.fid); save(); renderSheet(); break }
+    case 'do-add': case 'do-save': {
+      const s = ui.sheet, g = num(s.g);
+      if (!(g > 0)) { toast('Укажи вес в граммах'); break }
+      const d = day();
+      if (a === 'do-add'){ const f = FOOD.get(s.fid); d.items.push({id:uid(), m:s.meal, fid:f.id, n:f.n, g, v:vec(f)}); pushRecent(f.id); toast(`Добавлено: ${f.n}, ${fmt(g)} г`) }
+      else { const it = d.items[s.edit]; it.g = g; it.m = s.meal; toast('Сохранено') }
+      save(); ui.sheet = null; render(); break }
+    case 'do-del': { const d = day(); lastDeleted = {date:ui.date, pid:S.active, item:d.items.splice(ui.sheet.edit,1)[0], idx:ui.sheet.edit};
+      cleanupDay(ui.date); save(); ui.sheet = null; render(); toast(`Удалено: ${lastDeleted.item.n}`, true); break }
+    case 'undo': if (lastDeleted){ const d = day(lastDeleted.date, lastDeleted.pid); d.items.splice(lastDeleted.idx, 0, lastDeleted.item); lastDeleted = null; save(); render(); $('toast').innerHTML = '' } break;
+    case 'custom-new': ui.sheet = {mode:'custom', meal:ui.sheet.meal, q:ui.sheet.q, cat:ui.sheet.cat}; renderSheet(true); break;
+    case 'custom-save': {
+      const n = $('cn').value.trim(), p = num($('cp').value), f = num($('cf').value), c = num($('cc').value);
+      const sg = num($('cs').value) || 0, fib = num($('cfib').value) || 0; let k = num($('ck').value);
+      const err = !n ? 'Впиши название.' : [p,f,c].some(x => !(x >= 0)) ? 'Заполни белки, жиры и углеводы (можно 0).' : sg > c ? 'Сахаров не может быть больше, чем углеводов.' : '';
+      if (err){ $('cerr').hidden = false; $('cerr').textContent = err; break }
+      if (!(k > 0)) k = Math.round(p*4 + f*9 + c*4 + fib*2);
+      const un = $('cun').value.trim(), ug = num($('cug').value);
+      const item = {id:'c'+uid(), n, k, p, f, c, s:sg, fib, un: un && ug > 0 ? un : null, ug: un && ug > 0 ? ug : null};
+      S.custom.push(item); save(); buildFoods();
+      ui.sheet = {mode:'amount', meal:ui.sheet.meal, fid:item.id, g: item.ug ? String(item.ug) : '100'}; renderSheet(true); toast('Продукт сохранён'); break }
+    case 'weight-save': {
+      const kg = num($('wIn').value); if (!(kg > 25 && kg < 350)) { toast('Введи вес в кг, например 78,4'); break }
+      const W = S.weights[S.active] ||= []; const d = todayKey(); const x = W.find(q => q.d === d);
+      x ? x.kg = kg : W.push({d, kg}); prof().weight = kg; save(); render(); toast('Вес записан, нормы пересчитаны'); break }
+    case 'sex': prof().sex = v; prof().checked = true; save(); render(); break;
+    case 'reco': { const pr = prof(), G = GOALS[pr.goal]; pr.p = G.p; pr.f = G.f; pr.s = G.s; save(); render(); toast('Подставлены нормы для цели'); break }
+    case 'padd': { const id = 'p'+uid(); S.profiles.push(newProfile(id, 'Новый', 'm')); S.active = id; save(); render(); toast('Профиль добавлен: впиши имя и параметры'); break }
+    case 'pdel': ui.confirm = {t:'pdel', id:v}; render(); break;
+    case 'pdel-yes': { const id = ui.confirm.id; S.profiles = S.profiles.filter(p => p.id !== id); delete S.days[id]; delete S.weights[id]; delete S.fav[id]; delete S.recent[id];
+      if (S.active === id) S.active = S.profiles[0].id; ui.confirm = null; save(); render(); toast('Профиль удалён'); break }
+    case 'cdel': ui.confirm = {t:'cdel', id:v}; render(); break;
+    case 'cdel-yes': S.custom = S.custom.filter(c => c.id !== ui.confirm.id); ui.confirm = null; save(); buildFoods(); render(); break;
+    case 'cancel': ui.confirm = null; render(); break;
+    case 'theme': S.theme = v; save(); render(); break;
+    case 'export': exportData(); break;
+    case 'import': $('importFile').click(); break;
+    case 'import-yes': S = ui.confirm.data; ui.confirm = null; save(); buildFoods(); ui.date = todayKey(); render(); toast('Данные восстановлены'); break;
+  }
+});
+
+document.addEventListener('input', e => {
+  const id = e.target.id, val = e.target.value;
+  if (id === 'q'){ ui.sheet.q = val; $('results').innerHTML = sheetResults(); return }
+  if (id === 'amt'){ ui.sheet.g = val; const s = ui.sheet; const v = s.snap ? s.snap.v : vec(FOOD.get(s.fid)); const g = num(val); $('pv').innerHTML = previewHtml(v, (g>0?g:0)/100); return }
+  if (id === 'rq'){
+    const q = val.trim();
+    $('rres').innerHTML = !q ? '<p class="muted small">Значения на 100 г. Начни вводить название.</p>' : (() => {
+      const l = searchFoods(q, null).slice(0,40);
+      return l.length ? `<div class="tbl"><table><thead><tr><th>На 100 г</th><th class="num">Ккал</th><th class="num">Б</th><th class="num">Ж</th><th class="num">У</th><th class="num">Сахара</th><th class="num">Клетч.</th></tr></thead><tbody>${l.map(f => `<tr><td>${esc(f.n)}</td><td class="num">${fmt(f.k)}</td><td class="num">${fmt(f.p,1)}</td><td class="num">${fmt(f.f,1)}</td><td class="num">${fmt(f.c,1)}</td><td class="num">${fmt(f.s,1)}</td><td class="num">${fmt(f.fib,1)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="empty">Не нашлось.</p>';
+    })();
+    return;
+  }
+  const pr = prof();
+  const map = {mName:['name', x => x.trim() || pr.name], mAge:['age', x => num(x)], mH:['height', x => num(x)], mW:['weight', x => num(x)], mBf:['bf', x => x.trim() === '' ? null : num(x)],
+               mAct:['act', x => +x], mGoal:['goal', x => x], mP:['p', x => +x], mF:['f', x => +x], mS:['s', x => +x]};
+  if (!map[id]) return;
+  const [key, conv] = map[id]; const x = conv(val);
+  const ok = {age: x => x >= 14 && x <= 100, height: x => x >= 120 && x <= 230, weight: x => x >= 30 && x <= 300, bf: x => x === null || (x >= 3 && x <= 60)}[key];
+  if (ok && !ok(x)) return;   // пока вводится, неполное значение не применяем
+  pr[key] = x; pr.checked = true; save();
+  if (id === 'mName'){ $('profiles').innerHTML = S.profiles.map(p => `<button class="pchip" data-act="prof" data-v="${p.id}" aria-pressed="${p.id===S.active}">${esc(p.name)}</button>`).join('') }
+  if (id === 'mP') $('mPv').textContent = fmt(x,1);
+  if (id === 'mF') $('mFv').textContent = fmt(x,1);
+  if (id === 'mS') $('mSv').textContent = x + ' %';
+  meOut();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && ui.sheet) closeSheet();
+  if (e.key === 'Enter' && e.target.id === 'amt') document.querySelector('[data-act=do-add],[data-act=do-save]')?.click();
+  if (e.key === 'Enter' && e.target.id === 'wIn') document.querySelector('[data-act=weight-save]')?.click();
+});
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(S, null, 1)], {type:'application/json'});
+  const name = `питание-копия-${todayKey()}.json`;
+  const file = new File([blob], name, {type:'application/json'});
+  if (navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file], title:'ПИТАНИЕ: копия данных'}).catch(() => {});
+  } else {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 1000);
+    toast('Файл копии сохранён в загрузки');
+  }
+}
+$('importFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (d.v !== 1 || !Array.isArray(d.profiles) || !d.profiles.length) throw 0;
+      const nd = Object.values(d.days || {}).reduce((a,x) => a + Object.keys(x).length, 0);
+      ui.confirm = {t:'import', data:d, info:`${d.profiles.map(p => p.name).join(', ')}; дней в дневнике: ${nd}`}; render();
+    } catch(_) { toast('Это не файл копии ПИТАНИЯ') }
+    e.target.value = '';
+  };
+  r.readAsText(f);
+});
+
+window.addEventListener('scroll', () => $('hdr').classList.toggle('scrolled', scrollY > 4), {passive:true});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (ui.date === ui.today && ui.today !== todayKey()) ui.date = todayKey();   // открыли на следующий день
+  if (!ui.sheet) render();
+});
+render();
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
